@@ -39,13 +39,18 @@ Practical policy for a 25-person cohort:
 
 ---
 
-## 2. Install dependencies
+## 2. Get the labs and install dependencies
+
+Open a terminal in your notebook server (JupyterLab → **Terminal**) and run:
 
 ```bash
-git clone https://github.com/frontier-tops/Module-1.git
-git clone https://github.com/frontier-tops/Module-2.git
+git clone https://github.com/frontier-tops/fdp.git
+cd fdp
 pip install -r requirements-fdp.txt
 ```
+
+That one repository contains all 16 labs (in `labs/`), the corrected requirements file,
+and a per-lab guide (`LAB.md`) in every lab folder.
 
 ### Verify
 ```bash
