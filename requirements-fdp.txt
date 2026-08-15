@@ -1,0 +1,85 @@
+# FDP requirements — CORRECTED for the Charmed Kubeflow `jupyter-pytorch-cuda-full` image
+# =====================================================================================
+# Validated 2026-08-15 on node scs08 (NVIDIA L40S 46 GB, driver 570.124.06, CUDA 12.8).
+#
+# WHY THIS FILE EXISTS — the original Module-1/requirements.txt breaks the environment:
+#   * it pins `torch==2.6.0`, which makes pip REPLACE the image's CUDA build
+#     (torch 2.5.1+cu124) with a PyPI wheel -> CUDA is lost and torch ends up broken
+#     (pip left a corrupt `~orch` dir; `pip check` then reports "torch is not installed"
+#     for accelerate / peft / bitsandbytes / torchvision / torchaudio).
+#   * the resulting numpy/scipy ABI mismatch raises
+#     "All ufuncs must have type `numpy.ufunc`. Received (<ufunc 'sph_legendre_p'>...)"
+#     which makes `import transformers` and `import diffusers` fail outright
+#     -> Lab 2 (12 cell errors) and Lab 3 (10 cell errors) cannot run.
+#   * it pins `faiss-gpu-cu12`, unnecessary here (faiss-cpu is enough for the lab corpora).
+#
+# GOLDEN RULE: **never install/upgrade `torch` on this image.** It already ships
+# torch 2.5.1+cu124 built against the node's CUDA 12.8 driver. Everything below is
+# chosen to be compatible with that build.
+#
+# Install with:
+#   pip install -r requirements-fdp.txt
+#
+# Verify afterwards (all three must be True):
+#   python -c "import torch, transformers, diffusers; print(torch.__version__, torch.cuda.is_available())"
+
+# --- DO NOT ADD torch / torchvision / torchaudio HERE -------------------------------
+# (provided by the image: torch 2.5.1+cu124, torchvision 0.20.1+cu124, torchaudio 2.5.1+cu124)
+
+# --- numeric core: this pair must stay matched ---------------------------------------
+# scipy 1.15.x requires the numpy 2.x ufunc ABI; with numpy 1.26.4 it raises the
+# sph_legendre_p error above. Pinning scipy 1.14.1 keeps it compatible with numpy 1.26.4,
+# which is what diffusers/transformers in these labs expect.
+numpy==1.26.4
+scipy==1.14.1
+
+# --- LangChain stack (Labs 1, 7, 8, 9, 10, 14) ---------------------------------------
+langchain==0.3.22
+langchain-core==0.3.50
+langchain-community==0.3.20
+langchain-ollama==0.3.0
+langchain-huggingface==0.1.2
+langchain-chroma==0.2.2
+langchain-text-splitters==0.3.7
+ollama==0.4.7
+
+# --- Transformers / generation (Labs 2, 3, 12, 13) -----------------------------------
+transformers==4.50.3
+tokenizers==0.21.1
+accelerate==1.5.2
+huggingface-hub==0.30.1
+safetensors==0.5.3
+
+# --- Diffusion (Lab 3) ----------------------------------------------------------------
+diffusers==0.32.2
+
+# --- Fine-tuning (Lab 12) -------------------------------------------------------------
+peft==0.15.1
+trl==0.16.0
+datasets==3.5.0
+bitsandbytes==0.45.4
+
+# --- Vector stores / embeddings (Labs 9, 10) ------------------------------------------
+faiss-cpu==1.10.0
+chromadb==0.6.3
+sentence-transformers==3.4.1
+
+# --- Agents (Lab 16) ------------------------------------------------------------------
+pyautogen==0.8.0
+ag2[ollama]==0.8.0
+
+# --- Documents / web (Labs 8, 10) -----------------------------------------------------
+pypdf==5.4.0
+PyPDF2==3.0.1
+beautifulsoup4==4.13.3
+wikipedia==1.4.0
+
+# --- Apps (Labs 4, 10) ----------------------------------------------------------------
+streamlit==1.44.0
+
+# --- Gemini (Lab 6 — needs a personal API key from aistudio.google.com) ---------------
+google-generativeai==0.8.4
+
+# --- Misc -----------------------------------------------------------------------------
+pydantic==2.10.6
+pydantic-core==2.27.2
