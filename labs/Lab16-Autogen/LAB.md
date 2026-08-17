@@ -29,8 +29,7 @@ user_proxy = autogen.UserProxyAgent(
 Also pass `max_turns=...` to `initiate_chat(...)` where available.
 
 ## Environment specifics
-This lab reaches Ollama over **HTTPS at `https://ollama.ai-application.frontier.in`**, not the
-`10.79.253.112:11434` address the other Ollama labs use. Cell 1 configures it:
+Point AutoGen at the shared Ollama server:
 ```python
 import ollama
 import autogen.oai.ollama as autogen_ollama
@@ -49,17 +48,6 @@ config_list = [{
     "client_host": "https://ollama.ai-application.frontier.in",
 }]
 ```
-Two things worth explaining if a participant asks:
-
-- **`api_type: "ollama"`** uses AutoGen's native Ollama client, not the OpenAI-compatible
-  `/v1` shim — hence `client_host` rather than `base_url`, and no `api_key`.
-- **`verify=False` disables TLS certificate verification.** The endpoint presents a
-  certificate the notebook image does not trust, and the `ollama` client exposes no config
-  hook for this, so the subclass injects the flag and is patched over
-  `autogen.oai.ollama.Client`. It makes the connection vulnerable to interception, which is
-  acceptable inside the lab network but **is not a pattern to copy into production** — there,
-  install the issuing CA into the trust store instead. Worth saying out loud rather than
-  letting it be copy-pasted silently.
 > `code_execution_config={"use_docker": False}` is essential — there is no Docker daemon
 > inside a Kubeflow notebook pod, and AutoGen defaults to Docker execution.
 
