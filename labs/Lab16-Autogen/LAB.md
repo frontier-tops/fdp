@@ -1,6 +1,6 @@
 # Lab 16 — Agentic AI with AutoGen (multi-agent)
 
-**Duration** ~50 min · **GPU required** No · **Backend** Ollama (`http://10.79.253.112:11434`), `llama3.1:8b`
+**Duration** ~50 min · **GPU required** No · **Backend** Ollama (`https://ollama.ai-application.frontier.in`), `llama3.1:8b`
 **Verified** ⚠️ **Did not converge in testing** — the agent conversation was still running
 after 230 s and was stopped. Cap the turns (below) before running.
 
@@ -29,13 +29,23 @@ user_proxy = autogen.UserProxyAgent(
 Also pass `max_turns=...` to `initiate_chat(...)` where available.
 
 ## Environment specifics
-Point AutoGen at the shared Ollama server through its OpenAI-compatible endpoint:
+Point AutoGen at the shared Ollama server:
 ```python
+import ollama
+import autogen.oai.ollama as autogen_ollama
+
+class InsecureOllamaClient(ollama.Client):
+    def __init__(self, host=None, **kwargs):
+        kwargs.setdefault("verify", False)
+        super().__init__(host=host, **kwargs)
+
+autogen_ollama.Client = InsecureOllamaClient
+
 config_list = [{
     "model": "llama3.1:8b",
-    "base_url": "http://10.79.253.112:11434/v1",
-    "api_key": "ollama",          # required by the client, unused by Ollama
-    "price": [0, 0],              # silences cost warnings
+    "api_type": "ollama",
+    "stream": False,
+    "client_host": "https://ollama.ai-application.frontier.in",
 }]
 ```
 > `code_execution_config={"use_docker": False}` is essential — there is no Docker daemon
@@ -43,7 +53,7 @@ config_list = [{
 
 ## Walkthrough
 1. **Install / import** — `pyautogen` (in `requirements-fdp.txt`).
-2. **Config list** — as above, pointing at Ollama's `/v1` endpoint.
+2. **Config list** — as above, pointing at the HTTPS Ollama endpoint.
 3. **Create agents** — typically an `AssistantAgent` (does the work) and a `UserProxyAgent`
    (represents the human, can execute code).
 4. **Initiate the chat** — give the pair a task and watch the exchange.
