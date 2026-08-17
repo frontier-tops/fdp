@@ -61,21 +61,40 @@ Check them on the morning of the session with the command in
 cell — the pipeline code does not change. Working replacements as of 2026-08-17 include
 `nvidia/nemotron-3-nano-30b-a3b` and `nvidia/nvidia-nemotron-nano-9b-v2` for generation.
 
-## 🚨 Patched pip cell
-The upstream notebook's install cell ends with:
-```python
-%pip install -q ... langchain_nvidia_ai_endpoints openai numpy==2.3.5
-```
-Both highlighted parts break this environment:
-- **`numpy==2.3.5`** violates golden rule #2 in [README.md](../../README.md) — it churns the
-  ABI that Labs 2, 3 and 12 depend on.
-- **unpinned `langchain_nvidia_ai_endpoints`** resolves to 1.x, which requires
-  `langchain-core>=1.4.7`. That would drag the pinned `langchain-core 0.3.50` out from under
-  Labs 1, 7, 8, 9, 10 and 14.
+## 🚨 This lab installs its own dependencies — run it in a throwaway notebook
 
-The cell is **commented out and tagged `[FDP-PATCHED]`**. `langchain-nvidia-ai-endpoints` is
-pinned to **0.3.9** in [`requirements-fdp.txt`](../../requirements-fdp.txt) — the newest
-release that still accepts `langchain-core 0.3.50`. Do not `pip install -U` it.
+Unlike every other lab in this pack, **cell 1 of this notebook is a live `%pip install`**.
+It is kept live because that is what has been verified working end-to-end:
+
+```python
+%pip install -q pypdf faiss-cpu "langchain>=0.3,<0.4" "langchain-core>=0.3,<0.4" \
+    "langchain-text-splitters>=0.3,<0.4" langchain-community \
+    langchain_nvidia_ai_endpoints openai numpy==2.3.5
+```
+
+Two things every facilitator needs to know about it:
+
+**1. It installs `numpy==2.3.5`.** That is a deliberate exception to golden rule #2 in
+[README.md](../../README.md). Labs 2, 3 and 12 need the image's original numpy/CUDA ABI, so
+**do not run this lab in a notebook server you then use for those labs.** Use a separate
+notebook server, or restart and reinstall from
+[`requirements-fdp.txt`](../../requirements-fdp.txt) afterwards:
+```bash
+pip install -r requirements-fdp.txt
+python -c "import torch, transformers, diffusers; print(torch.__version__, torch.cuda.is_available())"
+```
+Expected: `2.5.1+cu124 True`.
+
+**2. Do not remove the `"langchain-core>=0.3,<0.4"` line.** It is load-bearing. Unpinned,
+`langchain_nvidia_ai_endpoints` resolves to 1.x, which requires `langchain-core>=1.4.7`.
+Co-specifying the `<0.4` core constraint is what forces pip to pick a 0.3.x NVIDIA release
+instead. Delete that line and the install silently pulls a stack that breaks Labs 1, 7, 8,
+9, 10 and 14.
+
+For anyone installing from the requirements file rather than running this cell,
+`langchain-nvidia-ai-endpoints` is pinned to **0.3.9** in
+[`requirements-fdp.txt`](../../requirements-fdp.txt) — the newest release that still accepts
+`langchain-core 0.3.50`.
 
 ## Upstream fix already applied
 The original lab used `meta/llama-3.2-3b-instruct`. That endpoint now stalls and returns
