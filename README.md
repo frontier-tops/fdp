@@ -57,7 +57,7 @@ one — everything else runs GPU-free in your notebook and talks to the shared m
 
 ---
 
-## The 16 labs
+## The 17 labs
 
 | # | Lab | GPU notebook? | Backend | Notes |
 |---|---|---|---|---|
@@ -77,6 +77,7 @@ one — everything else runs GPU-free in your notebook and talks to the shared m
 | 14 | [SQL Agent](labs/Lab14-SQL-Agent/) | No | Ollama | Build the database first (see LAB.md) |
 | 15 | [Text-to-SQL in Open WebUI](labs/Lab15-Text-to-SQL-in-OWUI/) | No | Open WebUI | No-code SQL agent |
 | 16 | [AutoGen Multi-Agent](labs/Lab16-Autogen/) | No | Ollama | Cap the turns (see LAB.md) |
+| 17 | [RAG with NVIDIA NIMs](labs/Lab17-RAG-With-NVIDIA-NIMs/) | No | **NVIDIA API Catalog** | Needs your own API key **and outbound internet** — read LAB.md first |
 
 Each lab folder contains a **`LAB.md`** with: what the lab does, how it works in this
 environment, a step-by-step walkthrough, a troubleshooting table, and teaching notes.
@@ -108,3 +109,8 @@ fdp/
         ├── LAB.md          ← detailed lab guide for this environment
         └── *.ipynb         ← the notebook
 ```
+
+> **Lab 17 is the one exception to "everything runs on the VPN".** It calls NVIDIA's hosted
+> API over the public internet and needs a personal key, so it ships its own PDF corpus and
+> a `RAGPipeline.py` helper alongside the notebook. Read its `LAB.md` before the session —
+> the model endpoints it uses carry retirement dates.

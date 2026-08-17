@@ -5,3 +5,10 @@ __pycache__/
 ~$*
 *.docx
 *.pdf
+
+# Lab 17 ships its own document corpus - the lab cannot run without these PDFs,
+# so they are exempt from the *.pdf rule above.
+!labs/Lab17-RAG-With-NVIDIA-NIMs/pdf/**/*.pdf
+
+# Generated FAISS index (Lab 17 cell 15 rebuilds it)
+labs/Lab17-RAG-With-NVIDIA-NIMs/embeddings/
