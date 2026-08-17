@@ -1,6 +1,6 @@
 # Lab 16 — Agentic AI with AutoGen (multi-agent)
 
-**Duration** ~50 min · **GPU required** No · **Backend** Ollama (`http://10.79.253.112:11434`), `llama3.1:8b`
+**Duration** ~50 min · **GPU required** No · **Backend** Ollama (`https://ollama.ai-application.frontier.in`), `llama3.1:8b`
 **Verified** ⚠️ **Did not converge in testing** — the agent conversation was still running
 after 230 s and was stopped. Cap the turns (below) before running.
 
@@ -29,21 +29,43 @@ user_proxy = autogen.UserProxyAgent(
 Also pass `max_turns=...` to `initiate_chat(...)` where available.
 
 ## Environment specifics
-Point AutoGen at the shared Ollama server through its OpenAI-compatible endpoint:
+This lab reaches Ollama over **HTTPS at `https://ollama.ai-application.frontier.in`**, not the
+`10.79.253.112:11434` address the other Ollama labs use. Cell 1 configures it:
 ```python
+import ollama
+import autogen.oai.ollama as autogen_ollama
+
+class InsecureOllamaClient(ollama.Client):
+    def __init__(self, host=None, **kwargs):
+        kwargs.setdefault("verify", False)
+        super().__init__(host=host, **kwargs)
+
+autogen_ollama.Client = InsecureOllamaClient
+
 config_list = [{
     "model": "llama3.1:8b",
-    "base_url": "http://10.79.253.112:11434/v1",
-    "api_key": "ollama",          # required by the client, unused by Ollama
-    "price": [0, 0],              # silences cost warnings
+    "api_type": "ollama",
+    "stream": False,
+    "client_host": "https://ollama.ai-application.frontier.in",
 }]
 ```
+Two things worth explaining if a participant asks:
+
+- **`api_type: "ollama"`** uses AutoGen's native Ollama client, not the OpenAI-compatible
+  `/v1` shim — hence `client_host` rather than `base_url`, and no `api_key`.
+- **`verify=False` disables TLS certificate verification.** The endpoint presents a
+  certificate the notebook image does not trust, and the `ollama` client exposes no config
+  hook for this, so the subclass injects the flag and is patched over
+  `autogen.oai.ollama.Client`. It makes the connection vulnerable to interception, which is
+  acceptable inside the lab network but **is not a pattern to copy into production** — there,
+  install the issuing CA into the trust store instead. Worth saying out loud rather than
+  letting it be copy-pasted silently.
 > `code_execution_config={"use_docker": False}` is essential — there is no Docker daemon
 > inside a Kubeflow notebook pod, and AutoGen defaults to Docker execution.
 
 ## Walkthrough
 1. **Install / import** — `pyautogen` (in `requirements-fdp.txt`).
-2. **Config list** — as above, pointing at Ollama's `/v1` endpoint.
+2. **Config list** — as above, pointing at the HTTPS Ollama endpoint.
 3. **Create agents** — typically an `AssistantAgent` (does the work) and a `UserProxyAgent`
    (represents the human, can execute code).
 4. **Initiate the chat** — give the pair a task and watch the exchange.
