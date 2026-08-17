@@ -66,18 +66,29 @@ Expected — this exact output was confirmed on the live node:
 ```
 
 ### Extra step for Lab 8
+`playwright` is installed by `requirements-fdp.txt`, but the browser and its system libraries
+are separate. **Do not run `playwright install-deps` — it needs root, which notebook users do
+not have.** Use the isolated conda prefix instead:
+
 ```bash
-pip install playwright
 playwright install chromium
-playwright install-deps chromium      # may require elevated rights
+conda create -y -p ~/.nsslibs -c conda-forge \
+  nspr nss atk-1.0 at-spi2-atk at-spi2-core libcups libdrm libxkbcommon \
+  xorg-libxcomposite xorg-libxdamage xorg-libxfixes xorg-libxrandr xorg-libxtst \
+  libgbm pango cairo alsa-lib dbus expat
 ```
 
-### Extra step for Lab 14
-```bash
-cd labs/Lab14-SQL-Agent
-sqlite3 Chinook.db < Chinook_Sqlite.sql
-sqlite3 Chinook.db "SELECT COUNT(*) FROM Album;"    # expect 347
+Then set this in the notebook's first cell, before importing Playwright:
+```python
+import os
+os.environ["LD_LIBRARY_PATH"] = "/home/jovyan/.nsslibs/lib:" + os.environ.get("LD_LIBRARY_PATH", "")
 ```
+See `labs/Lab08-Web-Scraping/LAB.md` for the no-browser fallback.
+
+### Lab 14 — no step needed
+`Chinook.db` now ships pre-built in `labs/Lab14-SQL-Agent/`. Note the `sqlite3` **command-line
+tool is not installed** on the lab image; if you ever need to rebuild the database, use the
+Python snippet in that lab's `LAB.md`.
 
 ### Extra step for Lab 10
 ```bash
@@ -170,7 +181,7 @@ SSH and the vLLM ports are deliberately blocked.
 - [ ] Ollama up with all 10 models — `curl .../api/tags`
 - [ ] Open WebUI reachable on `:3000`
 - [ ] Kubeflow login works with the session credentials
-- [ ] `Chinook.db` pre-built and shipped in the Lab 14 folder
+- [x] `Chinook.db` pre-built and shipped in the Lab 14 folder
 - [ ] At least one PDF placed in Lab 10's `./data`
 - [ ] `playwright` + chromium pre-installed for Lab 8
 - [ ] **Shared HF cache pre-seeded** with `gpt2-xl`, `stable-diffusion-v1-4`,

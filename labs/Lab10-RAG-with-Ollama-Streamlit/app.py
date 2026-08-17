@@ -26,7 +26,7 @@ async def get_conversational_answer(retriever,input,chat_history):
     )
 
 
-    llm = ChatOllama(model="mistral:7b")
+    llm = ChatOllama(model="mistral:7b", base_url="http://10.79.253.112:11434")
 
     history_aware_retriever = create_history_aware_retriever(
         llm, retriever, contextualize_q_prompt
@@ -71,7 +71,7 @@ def main():
         with st.chat_message(message["role"], avatar = message['avatar']):
             st.markdown(message["content"])
 
-    embed_model = OllamaEmbeddings(model='nomic-embed-text:latest')
+    embed_model = OllamaEmbeddings(model='nomic-embed-text:latest', base_url="http://10.79.253.112:11434")
 
     with st.sidebar:
         st.subheader('Upload Your PDF File')

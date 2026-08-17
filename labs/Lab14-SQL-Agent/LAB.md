@@ -13,39 +13,36 @@ Chinook sample database, and explains the results.
 - Convert natural language into SQL and execute it.
 - Validate query correctness and discuss academic analytics use-cases.
 
-## 🔴 Blocking defect — the database is never created
-The notebook queries tables that do not exist:
-```
-ValueError: table_names {'Album'} not found in database
-```
-The repo ships **`Chinook_Sqlite.sql`** (the schema + data as SQL text) but the notebook
-expects a ready-made **`Chinook.db`** SQLite file, and no cell builds it.
+## Database — pre-built, nothing to do
+**`Chinook.db` now ships in this folder** (11 tables · 347 albums · 3,503 tracks). The notebook
+runs straight through; there is no build step.
 
-**Fix — run this once in the lab folder before starting:**
-```bash
-cd "Lab14-SQL-Agent"
-sqlite3 Chinook.db < Chinook_Sqlite.sql
-sqlite3 Chinook.db "SELECT COUNT(*) FROM Album;"     # expect 347
-```
-If `sqlite3` is unavailable, do it in Python:
+<details>
+<summary>Rebuilding it from <code>Chinook_Sqlite.sql</code> (only if the file is missing)</summary>
+
+Use **Python** — the `sqlite3` **command-line tool is not installed** on the lab image, so the
+`sqlite3 Chinook.db < …` form fails with `sqlite3: command not found`:
+
 ```python
 import sqlite3
 con = sqlite3.connect("Chinook.db")
 con.executescript(open("Chinook_Sqlite.sql", encoding="utf-8", errors="ignore").read())
-con.commit(); con.close()
+con.commit()
+print("Albums:", con.execute("SELECT COUNT(*) FROM Album").fetchone()[0])   # expect 347
+con.close()
 ```
+</details>
 
 ## Walkthrough
-1. **Build the database** (above) — do not skip.
-2. **Load the LLM** — `gemma2:9b` from the Ollama server.
-3. **Connect** — `SQLDatabase.from_uri("sqlite:///Chinook.db")`.
-4. **Toolkit** — `SQLDatabaseToolkit` exposes list-tables, schema, query-checker and query
+1. **Load the LLM** — `gemma2:9b` from the Ollama server.
+2. **Connect** — `SQLDatabase.from_uri("sqlite:///Chinook.db")`.
+3. **Toolkit** — `SQLDatabaseToolkit` exposes list-tables, schema, query-checker and query
    tools to the agent.
-5. **Create the agent** and ask questions in plain English
+4. **Create the agent** and ask questions in plain English
    (*"Which artist has the most albums?"*).
-6. **Trace the reasoning** — watch the agent inspect the schema, draft SQL, check it, run it,
+5. **Trace the reasoning** — watch the agent inspect the schema, draft SQL, check it, run it,
    then narrate the answer.
-7. **Validate** — run the generated SQL yourself and confirm the numbers match.
+6. **Validate** — run the generated SQL yourself and confirm the numbers match.
 
 ## Troubleshooting
 | Symptom | Fix |

@@ -55,6 +55,7 @@ diffusers==0.32.2
 
 # --- Fine-tuning (Lab 12) -------------------------------------------------------------
 peft==0.15.1
+tensorboard==2.19.0          # Lab 12: HF Trainer's TensorBoardCallback hard-requires this
 trl==0.16.0
 datasets==3.5.0
 bitsandbytes==0.45.4
@@ -72,6 +73,7 @@ ag2[ollama]==0.8.0
 pypdf==5.4.0
 PyPDF2==3.0.1
 beautifulsoup4==4.13.3
+playwright==1.62.0           # Lab 8: browser download + system libs are SEPARATE steps, see Lab08/LAB.md
 wikipedia==1.4.0
 
 # --- Apps (Labs 4, 10) ----------------------------------------------------------------
