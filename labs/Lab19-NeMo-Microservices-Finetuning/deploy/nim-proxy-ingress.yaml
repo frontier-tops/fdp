@@ -1,0 +1,34 @@
+# Extra ingress for NIM Proxy under a /nim prefix.
+#
+# WHY: nim-proxy and the Entity Store BOTH serve "/v1/models", but they mean
+# different things:
+#   Entity Store /v1/models -> registered model entities (what the SDK reads)
+#   nim-proxy    /v1/models -> models actually loaded for inference
+# The chart's ingress gives /v1/models to the Entity Store, which the SDK needs.
+# So nim-proxy gets its own prefix here, rewritten back to the root path.
+#
+#   http://HOST:30800/nim/v1/models -> nim-proxy /v1/models
+#
+# Note: upstream 25.12.1 has no "/v1/models/nim" route. That path exists only in
+# HPE's PCAI-adapted chart, and 404s here.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nemo-nim-proxy-prefixed
+  namespace: nemo
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /nim(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: nemo-nim-proxy
+                port:
+                  number: 8000

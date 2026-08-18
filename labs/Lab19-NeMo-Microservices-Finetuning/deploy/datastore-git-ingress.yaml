@@ -1,0 +1,32 @@
+# Git LFS routes for the NeMo Data Store.
+#
+# WHY: huggingface_hub uploads large files over Git LFS, to URLs shaped like
+#   /{namespace}/{repo}.git/info/lfs/objects/{oid}/{size}
+# The chart's ingress only exposes /v1/hf and /v1/datastore, so LFS uploads
+# 404 and every dataset upload fails. HPE's PCAI chart routes "/*.git/*" to the
+# Data Store for exactly this reason; upstream leaves it to you.
+#
+# Kept in its own Ingress because the /nim ingress uses a rewrite-target, and a
+# rewrite would corrupt these paths - LFS URLs must pass through untouched.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nemo-datastore-git
+  namespace: nemo
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /.*\.git(/.*)?$
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: nemo-data-store
+                port:
+                  number: 3000

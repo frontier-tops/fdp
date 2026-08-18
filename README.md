@@ -83,6 +83,7 @@ one — everything else runs GPU-free in your notebook and talks to the shared m
 | 15 | [Text-to-SQL in Open WebUI](labs/Lab15-Text-to-SQL-in-OWUI/) | No | Open WebUI | No-code SQL agent |
 | 16 | [AutoGen Multi-Agent](labs/Lab16-Autogen/) | No | Ollama | Cap the turns (see LAB.md) |
 | 17 | [RAG with NVIDIA NIMs](labs/Lab17-RAG-With-NVIDIA-NIMs/) | No | **NVIDIA API Catalog** | Own API key + outbound internet; installs its own deps — **use a separate notebook server** (see LAB.md) |
+| 19 | [Fine-Tuning a Tool-Calling LLM](labs/Lab19-NeMo-Microservices-Finetuning/) | No (uses a shared cluster GPU) | **self-hosted NeMo Microservices** | Own HF token + gated dataset approval; installs its own deps and pins `huggingface_hub<1.0` — **use a separate notebook server** (see LAB.md) |
 
 Each lab folder contains a **`LAB.md`** with: what the lab does, how it works in this
 environment, a step-by-step walkthrough, a troubleshooting table, and teaching notes.
