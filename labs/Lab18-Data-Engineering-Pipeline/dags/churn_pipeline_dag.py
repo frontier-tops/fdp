@@ -200,6 +200,17 @@ def _tail_driver_log(core, name, lines=40):
 default_args = {"owner": "instructor", "retries": 1,
                 "retry_delay": timedelta(minutes=1)}
 
+# PCAI enforces a policy that every DAG declares who may touch it; without this the
+# scheduler reports "Unprotected DAG Detected" and refuses to load it.
+#
+# Note that TRIGGERING a DAG needs `can_edit`, not just `can_read` -- so participants
+# must have both, or the Trigger button does nothing for them. They deliberately do
+# NOT get `can_delete`: 30 people should be able to run this DAG, not remove it.
+ACCESS_CONTROL = {
+    "Admin": {"can_read", "can_edit", "can_delete"},
+    "All":   {"can_read", "can_edit"},
+}
+
 with DAG(
     dag_id="churn_pipeline",
     description='Curate one student\'s watch_events with Spark. Trigger with {"student_id": N}',
@@ -208,6 +219,7 @@ with DAG(
     schedule=None,          # students trigger it; never on a timer
     catchup=False,
     max_active_runs=40,     # all 30 must SEE their run start, not queue invisibly
+    access_control=ACCESS_CONTROL,
     tags=["lab", "spark", "churn"],
 ) as dag:
 

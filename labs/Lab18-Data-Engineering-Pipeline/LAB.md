@@ -53,7 +53,44 @@ lazy evaluation · partitions & parallelism · shuffle · columnar storage · pa
 aggregation & feature engineering · federation · labels & supervised learning ·
 hardware acceleration · reproducibility & registry · promotion gates
 
-## The DAG
+## What participants actually do
+
+| Step | Where | Time |
+|---|---|---|
+| 1. Look at the raw data — 180 files, why it isn't trainable | terminal / notebook | ~10 min |
+| 2. Query `subscribers` through EzPresto — no copy made | EzPresto worksheet | ~10 min |
+| 3. **Run a Spark job** — Create Spark Application wizard | PCAI UI | ~15 min |
+| 4. **`notebooks/Lab18_Train_Churn_Model.ipynb`** — cuDF squash, GPU join, train, MLflow | GPU notebook | ~40 min |
+| 5. Compare AUCs | MLflow | ~5 min |
+
+Airflow is covered as a **concept only** — no DAG is run during the session. The DAG below
+exists for a future iteration.
+
+### Running the Spark job (step 3)
+**Data Engineering → Spark Applications → Create Spark Application**
+
+| Screen | Setting |
+|---|---|
+| Details | Name `curate-student-NN` |
+| Configure | Type **Python** · Source **Shared Folder** · Class Name *empty* |
+| File Name | **Browse** to `data-engineering-lab/spark/curate_events.py` |
+| Arguments | `NN` |
+| | `file:///mounts/shared-volume/shared/data-engineering-lab/raw/watch_events` |
+| | `file:///mounts/shared-volume/shared/data-engineering-lab/curated/student-NN/watch_events` |
+| Driver | 1 core, 4G · Executor 1 × 1 core, 4G |
+
+> The app file comes out as `local://`, the data arguments are `file://`. Browse fills the
+> first one in for you. Substitute your own zero-padded number for `NN`.
+
+### The notebook (step 4)
+`notebooks/Lab18_Train_Churn_Model.ipynb` — 8 parts, fully documented, run top to bottom.
+The only thing a participant edits is `STUDENT_ID` in Part 1.
+
+Covers: Parquet and columnar storage · partition pruning · **cuDF / RAPIDS with a timed
+CPU-vs-GPU comparison** · joining across two systems · XGBoost on GPU · feature importance
+(including a planted noise column) · MLflow registration.
+
+## The DAG (not used in the session)
 `dags/churn_pipeline_dag.py` — **one** DAG, triggered once per participant:
 
 > Airflow UI → `churn_pipeline` → **Trigger DAG w/ config** → `{"student_id": 7}`
@@ -67,6 +104,21 @@ Airflow task log. Three details in the spec are platform-specific and easy to ge
 - the API group is `sparkoperator.hpe.com/v1beta2`, **not** `sparkoperator.k8s.io`
 - three PVCs must be mounted (user, shared, spark-history event log)
 - the MapR `sparkConf` keys and the `imagepull` secret are required
+
+### Platform requirement: `access_control`
+PCAI refuses to load a DAG that does not declare who may use it — the scheduler reports
+*"Unprotected DAG Detected"*. The DAG sets:
+
+```python
+access_control = {
+    "Admin": {"can_read", "can_edit", "can_delete"},
+    "All":   {"can_read", "can_edit"},
+}
+```
+
+**Triggering a DAG requires `can_edit`**, not just `can_read`, so participants need both or
+the Trigger button silently does nothing for them. They do not get `can_delete` — 30 people
+should be able to run this DAG, not remove it.
 
 ### Before it will run
 1. **Airflow pool** — Admin → Pools → `spark_pool`, **8** slots. Caps concurrent Spark jobs
