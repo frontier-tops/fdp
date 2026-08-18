@@ -1,0 +1,33 @@
+{
+  "namespace": "student01",
+  "tuned_model": "student01/llama-3.2-1b-toolcalling@v1",
+  "train_examples": 1050,
+  "eval_limit": 50,
+  "base_name_accuracy": 0.32,
+  "tuned_name_accuracy": 1.0,
+  "base_full_accuracy": 0.26,
+  "tuned_full_accuracy": 0.78,
+  "total_runtime_minutes": 18.7,
+  "cell_timings": [
+    {
+      "cell": 27,
+      "label": "from time import sleep, time",
+      "seconds": 80.6
+    },
+    {
+      "cell": 32,
+      "label": "def wait_for_training(job_id, poll=15, timeout=5400):",
+      "seconds": 925.5
+    },
+    {
+      "cell": 37,
+      "label": "for i, ex in enumerate(test_eval[:3], 1):",
+      "seconds": 38.7
+    },
+    {
+      "cell": 39,
+      "label": "print(f\"Evaluating YOUR model ({TUNED_MODEL})...\")",
+      "seconds": 60.5
+    }
+  ]
+}
