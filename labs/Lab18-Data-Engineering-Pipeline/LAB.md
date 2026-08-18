@@ -68,6 +68,21 @@ Airflow task log. Three details in the spec are platform-specific and easy to ge
 - three PVCs must be mounted (user, shared, spark-history event log)
 - the MapR `sparkConf` keys and the `imagepull` secret are required
 
+### Platform requirement: `access_control`
+PCAI refuses to load a DAG that does not declare who may use it — the scheduler reports
+*"Unprotected DAG Detected"*. The DAG sets:
+
+```python
+access_control = {
+    "Admin": {"can_read", "can_edit", "can_delete"},
+    "All":   {"can_read", "can_edit"},
+}
+```
+
+**Triggering a DAG requires `can_edit`**, not just `can_read`, so participants need both or
+the Trigger button silently does nothing for them. They do not get `can_delete` — 30 people
+should be able to run this DAG, not remove it.
+
 ### Before it will run
 1. **Airflow pool** — Admin → Pools → `spark_pool`, **8** slots. Caps concurrent Spark jobs
    while `max_active_runs=40` still lets every participant see their run start.
