@@ -12,3 +12,7 @@ __pycache__/
 
 # Generated FAISS index (Lab 17 cell 15 rebuilds it)
 labs/Lab17-RAG-With-NVIDIA-NIMs/embeddings/
+
+# slide decks are delivered separately, not versioned here
+*.pptx
+*.potx
