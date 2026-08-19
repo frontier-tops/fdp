@@ -84,7 +84,24 @@ exists for a future iteration.
 
 ### The notebook (step 4)
 `notebooks/Lab18_Train_Churn_Model.ipynb` — 8 parts, fully documented, run top to bottom.
-The only thing a participant edits is `STUDENT_ID` in Part 1.
+The only thing a participant edits is `STUDENT_ID` in Part 1.2.
+
+**Part 1.1 installs its own dependencies** (`psycopg2-binary`, `xgboost`, `scikit-learn`,
+`mlflow`) with NumPy and pandas pinned, because installing any of them unpinned can silently
+downgrade NumPy and break the GPU dataframe library later, in a way that is hard to trace
+back to its cause.
+
+**cuDF is deliberately not installed by the notebook.** It is a 1–2 GB download and requires
+a *kernel restart*, which would break "run every cell from the top" for 30 people at once.
+Bake RAPIDS into the notebook image instead — proven working set:
+
+```
+cudf-cu12 26.08 · rmm-cu12 26.08 · numpy 2.4.6 · pandas 3.0.3
+xgboost · scikit-learn · psycopg2-binary · mlflow
+```
+
+Without it the notebook falls back to the CPU and everything still runs; you only lose the
+timed CPU-vs-GPU comparison.
 
 Covers: Parquet and columnar storage · partition pruning · **cuDF / RAPIDS with a timed
 CPU-vs-GPU comparison** · joining across two systems · XGBoost on GPU · feature importance
