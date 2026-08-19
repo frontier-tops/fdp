@@ -107,8 +107,13 @@ Two traps it works around, both found on real PCAI images:
 
 ```
 cudf-cu12 26.08 · rmm-cu12 26.08 · numpy 2.4.6 · pandas 3.0.3
-scikit-learn>=1.5 · scipy>=1.13 · xgboost · psycopg2-binary · mlflow
+scikit-learn>=1.5 · scipy>=1.13 · xgboost · psycopg2-binary · mlflow>=2.9,<3
 ```
+
+**`mlflow` must be pinned below 3.** PCAI runs an MLflow **2.x server**. A 3.x client calls
+`/api/2.0/mlflow/logged-models`, which that server does not implement — the run, params and
+metrics all log successfully and then model *registration* fails with a 404. Symptom to
+recognise: `artifact_path is deprecated, use name instead` followed by a 404.
 
 Thirty participants each running a dependency resolver against a slightly different starting
 state is thirty chances to land somewhere new.
