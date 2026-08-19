@@ -86,10 +86,21 @@ exists for a future iteration.
 `notebooks/Lab18_Train_Churn_Model.ipynb` — 8 parts, fully documented, run top to bottom.
 The only thing a participant edits is `STUDENT_ID` in Part 1.2.
 
-**Part 1.1 installs its own dependencies** (`psycopg2-binary`, `xgboost`, `scikit-learn`,
-`mlflow`) with NumPy and pandas pinned, because installing any of them unpinned can silently
-downgrade NumPy and break the GPU dataframe library later, in a way that is hard to trace
-back to its cause.
+**Part 1.1 installs its own dependencies in TWO ordered steps**, and the order is the whole
+point:
+
+1. `psycopg2-binary`, `xgboost`, `scikit-learn`, `mlflow` — resolved freely
+2. NumPy and pandas — forced afterwards to the versions everything else needs
+
+**Do not merge these into one pinned command.** mlflow requires `pandas<3`; cuDF 26.08
+requires `pandas>=3`. Given both constraints at once, pip backtracks through mlflow releases
+looking for one that satisfies them, reaches mlflow 1.27.0 (2022) whose metadata is
+malformed, fails — and leaves NumPy downgraded to 1.24. Installing mlflow first and
+correcting NumPy/pandas afterwards avoids the conflict; mlflow emits a version warning and
+works correctly.
+
+The cell detects whether cuDF is present and pins pandas 3.x if so, 2.2.3+ if not, then
+prints both versions and warns loudly if NumPy ended up below 2.
 
 **cuDF is deliberately not installed by the notebook.** It is a 1–2 GB download and requires
 a *kernel restart*, which would break "run every cell from the top" for 30 people at once.
