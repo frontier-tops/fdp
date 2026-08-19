@@ -86,10 +86,37 @@ exists for a future iteration.
 `notebooks/Lab18_Train_Churn_Model.ipynb` — 8 parts, fully documented, run top to bottom.
 The only thing a participant edits is `STUDENT_ID` in Part 1.2.
 
-**Part 1.1 installs its own dependencies** (`psycopg2-binary`, `xgboost`, `scikit-learn`,
-`mlflow`) with NumPy and pandas pinned, because installing any of them unpinned can silently
-downgrade NumPy and break the GPU dataframe library later, in a way that is hard to trace
-back to its cause.
+**Part 1.1 checks the environment and only fixes it if broken.** On a properly built image
+it prints `environment ready` and moves on — no install, no restart.
+
+If it does have to install, it says so and **tells the participant to restart the kernel**.
+That restart is unavoidable: NumPy is compiled into other packages, so replacing it under a
+running kernel produces the `numpy.dtype size changed` error.
+
+Two traps it works around, both found on real PCAI images:
+
+- **`scikit-learn 1.3` and `scipy 1.11` predate NumPy 2 and actively pin NumPy below 2.**
+  They must be *upgraded* (`scikit-learn>=1.5`, `scipy>=1.13`), not merely installed, or
+  they drag NumPy back down every time.
+- **mlflow requires `pandas<3`; cuDF 26.08 requires `pandas>=3`.** Given both at once, pip
+  backtracks through mlflow releases to 1.27.0 (2022), whose metadata is malformed, fails,
+  and leaves the environment worse. So packages are installed first and the NumPy/pandas
+  pair corrected afterwards. mlflow prints a version warning and works correctly.
+
+**The real fix is to bake the image**, so 1.1 is always a no-op:
+
+```
+cudf-cu12 26.08 · rmm-cu12 26.08 · numpy 2.4.6 · pandas 3.0.3
+scikit-learn>=1.5 · scipy>=1.13 · xgboost · psycopg2-binary · mlflow>=2.9,<3
+```
+
+**`mlflow` must be pinned below 3.** PCAI runs an MLflow **2.x server**. A 3.x client calls
+`/api/2.0/mlflow/logged-models`, which that server does not implement — the run, params and
+metrics all log successfully and then model *registration* fails with a 404. Symptom to
+recognise: `artifact_path is deprecated, use name instead` followed by a 404.
+
+Thirty participants each running a dependency resolver against a slightly different starting
+state is thirty chances to land somewhere new.
 
 **cuDF is deliberately not installed by the notebook.** It is a 1–2 GB download and requires
 a *kernel restart*, which would break "run every cell from the top" for 30 people at once.
